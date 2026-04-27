@@ -1,0 +1,10 @@
+*.csv
+*.jsonl
+__pycache__/
+*.pyc
+.env
+kaggle.json
+weights/
+checkpoints/
+*.bin
+*.safetensors
