@@ -25,8 +25,7 @@ leximini-ai/
 │   └── leximini_distillation_kaggle.ipynb
 ├── serve/
 │   └── Modelfile
-├── ui/
-│   └── leximini_app.py
+├── app.py
 └── requirements.txt
 ```
 
@@ -102,7 +101,7 @@ A Streamlit chat interface that connects to Ollama locally or a vLLM server. It 
 
 ```bash
 pip install streamlit requests
-streamlit run ui/leximini_app.py
+streamlit run app.py
 ```
 
 Select your backend in the sidebar (Ollama, vLLM, or Demo).
