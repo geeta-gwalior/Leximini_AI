@@ -1,0 +1,12 @@
+pandas
+datasets
+transformers
+torch
+peft
+trl
+accelerate
+bitsandbytes
+sentencepiece
+protobuf
+google-cloud-storage
+google-cloud-aiplatform
