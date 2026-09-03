@@ -1,4 +1,4 @@
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi import FastAPI, BackgroundTasks, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from typing import List, Optional
 import os
@@ -6,6 +6,7 @@ import os
 from services.rag_engine.qdrant_client import init_qdrant_collection
 from services.rag_engine.hybrid_search import HybridLegalSearch
 from services.rag_engine.ingest import ingest_laws, DATA_PATH
+from services.rag_engine.pdf_parser import extract_text_from_pdf_bytes, chunk_legal_text
 
 app = FastAPI(title="LexiMini Legal RAG Engine", version="1.0.0")
 
@@ -69,6 +70,24 @@ async def trigger_ingestion(background_tasks: BackgroundTasks):
     background_tasks.add_task(ingest_laws)
     return {"message": "Legal dataset vector ingestion started in background."}
 
+@app.post("/upload_pdf")
+async def upload_pdf_document(file: UploadFile = File(...)):
+    if not file.filename.endswith(('.pdf', '.txt')):
+        raise HTTPException(status_code=400, detail="Only PDF or TXT files supported.")
+
+    file_bytes = await file.read()
+    raw_text = extract_text_from_pdf_bytes(file_bytes)
+    chunks = chunk_legal_text(raw_text)
+
+    return {
+        "filename": file.filename,
+        "extracted_chars": len(raw_text),
+        "total_chunks": len(chunks),
+        "message": f"Successfully parsed '{file.filename}' into {len(chunks)} searchable legal chunks.",
+        "sample_chunk": chunks[0]["content"] if chunks else ""
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("services.rag_engine.main:app", host="0.0.0.0", port=8001, reload=True)
+
