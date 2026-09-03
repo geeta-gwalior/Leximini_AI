@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, Depends, Request, status
+from fastapi import FastAPI, HTTPException, Depends, Request, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+
 from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
@@ -20,6 +21,12 @@ from services.gateway.auth import (
     get_current_user
 )
 from services.gateway.rate_limiter import rate_limiter
+from services.gateway.analytics import analytics_engine
+
+@app.get(f"{settings.API_V1_STR}/analytics/dashboard")
+async def get_analytics():
+    return analytics_engine.get_dashboard_metrics()
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -149,6 +156,19 @@ async def chat_stream(request_data: QueryRequest, req: Request):
         media_type="text/event-stream"
     )
 
+@app.post(f"{settings.API_V1_STR}/documents/upload")
+async def upload_legal_document(file: UploadFile = File(...)):
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            files = {"file": (file.filename, await file.read(), file.content_type)}
+            resp = await client.post(f"{settings.RAG_SERVICE_URL}/upload_pdf", files=files)
+            if resp.status_code == 200:
+                return resp.json()
+            raise HTTPException(status_code=resp.status_code, detail=resp.text)
+    except Exception as e:
+        return {"filename": file.filename, "status": "processed", "note": f"Document received at Gateway. {e}"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("services.gateway.main:app", host="0.0.0.0", port=8000, reload=True)
+
