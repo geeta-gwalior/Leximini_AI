@@ -106,31 +106,58 @@ streamlit run app.py
 
 Select your backend in the sidebar (Ollama, vLLM, or Demo).
 
+### 6. Enterprise Microservices Architecture
+
+For production deployment, LexiMini AI uses an enterprise microservices pattern:
+
+- **API Gateway (`services/gateway/`)**: Handles JWT Auth, Async PostgreSQL session tracking, Redis rate limiting, and SSE chat streaming.
+- **RAG Engine (`services/rag_engine/`)**: BM25 statutory search combined with Qdrant dense vector search.
+- **Model Server (`services/model_server/`)**: OpenAI-compatible streaming completion proxy.
+- **Infrastructure (`infrastructure/terraform/`)**: Terraform modules for GCP GKE and Cloud SQL.
+
+#### Quick Start with Makefile:
+```bash
+make build   # Build all microservices
+make up      # Run microservices in background
+make seed    # Seed Qdrant Vector DB with Indian legal dataset
+make test    # Run Pytest unit and integration tests
+make eval    # Run MLOps legal benchmark evaluation
+```
+
+
 ---
 
 ## Tech Stack
 
-- Fine-tuning: Gemma 4 E4B + QLoRA via PEFT and TRL
-- Distillation: Google Tunix (JAX-native, logit-based)
-- Training compute: Google Colab T4, Kaggle TPU v5e-8
-- Storage: Google Cloud Storage
-- Serving: Ollama (local) or vLLM
-- UI: Streamlit
+- **Fine-tuning**: Gemma 4 E4B + QLoRA via PEFT and TRL
+- **Distillation**: Google Tunix (JAX-native, logit-based)
+- **Vector Search & RAG**: Qdrant Vector DB + BM25 Hybrid Search
+- **API & Gateway**: FastAPI, Async SQLAlchemy, Redis, JWT
+- **Training compute**: Google Colab T4, Kaggle TPU v5e-8
+- **Storage & Cloud**: Google Cloud Storage, Terraform, GKE
+- **Serving**: Ollama (local), vLLM, or FastAPI Model Server
+- **UI**: Streamlit
 
----
+### ☁️ GCP Native Production & Zero-Cost Local Emulation
 
-## Requirements
+This project is architected to showcase enterprise-grade Google Cloud Platform (GCP) integration while allowing **100% zero-cost local execution**:
 
-Install dependencies:
+- **GCP Native Infrastructure Specs**:
+  - **GKE (Google Kubernetes Engine)** & **Cloud Run**: Serverless container execution specs in `asia-south1` (Mumbai).
+  - **Google Cloud Storage (GCS)**: Bucket config for QLoRA model weights and distilled checkpoints.
+  - **Cloud SQL**: Managed PostgreSQL specification in [`infrastructure/terraform/main.tf`](file:///Users/kanishkakakrani/.gemini/antigravity-ide/scratch/Leximini_AI/infrastructure/terraform/main.tf).
+  - **Google Tunix**: JAX-native distillation pipeline for TPU v5e on Kaggle.
 
-```bash
-pip install -r requirements.txt
-```
-
-You need a HuggingFace account with Gemma access approved, and a Google Cloud project for storage.
+- **Zero-Cost Local Demo Runner (No GCP Billing Required)**:
+  Run the complete multi-service stack on your local machine without active GCP credentials:
+  ```bash
+  make demo    # Launches Gateway (8000), RAG (8001), Model Server (8002), and Web UI (8501)
+  ```
 
 ---
 
 ## Disclaimer
 
 LexiMini is for informational purposes only. It is not a substitute for advice from a qualified legal professional.
+
+
