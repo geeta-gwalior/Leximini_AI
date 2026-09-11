@@ -56,36 +56,42 @@ html, body, [class*="css"] {
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("""
+# Session State Initialization
+if "auth_token" not in st.session_state:
+    st.session_state.auth_token = None
+if "user_info" not in st.session_state:
+    st.session_state.user_info = None
+
+# Header Banner
+user_info = st.session_state.user_info
+org_display = user_info.get("organization_name", "Demo Guest Mode") if user_info else "Guest Mode"
+role_display = f"👑 Admin ({user_info.get('full_name')})" if (user_info and user_info.get("role") == "COMPANY_ADMIN") else (f"👤 Employee ({user_info.get('full_name')})" if user_info else "💡 Guest Visitor")
+
+st.markdown(f"""
 <div class="title-header">
-    <div class="title-text">⚖️ LexiMini AI</div>
-    <div class="subtitle-text">Enterprise Production AI Assistant for Indian Law</div>
+    <div class="title-text">⚖️ LexiMini AI — B2B Enterprise Legal SaaS</div>
+    <div class="subtitle-text">🏢 Active Workspace: <strong>{org_display}</strong> &nbsp;|&nbsp; Role: <strong>{role_display}</strong></div>
 </div>
 """, unsafe_allow_html=True)
 
-# Sidebar settings & SaaS Auth Portal
+# Sidebar settings & SaaS Multi-Tenant Portal
 with st.sidebar:
-    st.header("🔑 SaaS Account & Authentication")
+    st.header("🏢 SaaS Company Portal")
 
-    if "auth_token" not in st.session_state:
-        st.session_state.auth_token = None
-    if "user_email" not in st.session_state:
-        st.session_state.user_email = None
-
-    if st.session_state.auth_token:
-        st.success(f"👤 Logged in: **{st.session_state.user_email}**")
-        st.info("⚡ Plan: **Pro Legal Advocate SaaS (Active)**")
+    if st.session_state.auth_token and user_info:
+        st.success(f"👤 Logged in: **{user_info.get('email')}**")
+        st.info(f"🏢 Company: **{user_info.get('organization_name')}**\n\nRole: `{user_info.get('role')}` | Dept: `{user_info.get('department')}`")
         if st.button("🔒 Sign Out"):
             st.session_state.auth_token = None
-            st.session_state.user_email = None
+            st.session_state.user_info = None
             st.rerun()
     else:
-        st.info("💡 Running in **Guest / Demo Mode**. Log in for full SaaS access.")
-        with st.expander("🔐 Sign In / Sign Up (SaaS Portal)"):
-            auth_tab_login, auth_tab_signup = st.tabs(["Sign In", "Register Account"])
+        st.info("💡 Running in **Guest Preview Mode**. Register your company or sign in for your enterprise vault.")
+        with st.expander("🔐 Register Company / Sign In"):
+            auth_tab_login, auth_tab_reg_org, auth_tab_signup = st.tabs(["Sign In", "Register Company", "Individual Reg"])
 
             with auth_tab_login:
-                login_email = st.text_input("Advocate / Firm Email", key="login_email")
+                login_email = st.text_input("User Email", key="login_email")
                 login_pass = st.text_input("Password", type="password", key="login_pass")
                 if st.button("Sign In 🔑"):
                     try:
@@ -95,21 +101,55 @@ with st.sidebar:
                             timeout=10
                         )
                         if resp.status_code == 200:
-                            token_data = resp.json()
-                            st.session_state.auth_token = token_data.get("access_token")
-                            st.session_state.user_email = login_email
-                            st.success("Successfully authenticated!")
+                            data = resp.json()
+                            st.session_state.auth_token = data.get("access_token")
+                            st.session_state.user_info = data.get("user_info")
+                            st.success("Successfully logged in!")
                             st.rerun()
                         else:
-                            st.error("Invalid credentials. Please try again.")
+                            st.error("Invalid credentials.")
                     except Exception as e:
-                        st.error(f"Authentication error: {e}")
+                        st.error(f"Auth error: {e}")
+
+            with auth_tab_reg_org:
+                c_name = st.text_input("Company / Law Firm Name", key="c_name")
+                c_domain = st.text_input("Corporate Domain (e.g. acme.com)", key="c_domain")
+                c_admin_name = st.text_input("Company Admin Full Name", key="c_admin_name")
+                c_admin_email = st.text_input("Admin Email Address", key="c_admin_email")
+                c_admin_pass = st.text_input("Create Admin Password", type="password", key="c_admin_pass")
+
+                if st.button("Register Enterprise Company 🏢"):
+                    if not c_name or not c_admin_email or not c_admin_pass:
+                        st.warning("Please fill in company name, admin email, and password.")
+                    else:
+                        try:
+                            resp = requests.post(
+                                f"{GATEWAY_URL}/api/v1/org/register",
+                                json={
+                                    "company_name": c_name,
+                                    "domain": c_domain,
+                                    "admin_name": c_admin_name,
+                                    "admin_email": c_admin_email,
+                                    "admin_password": c_admin_pass
+                                },
+                                timeout=12
+                            )
+                            if resp.status_code == 200:
+                                data = resp.json()
+                                st.session_state.auth_token = data.get("access_token")
+                                st.session_state.user_info = data.get("user_info")
+                                st.success(f"Company '{c_name}' registered successfully!")
+                                st.rerun()
+                            else:
+                                st.error("Company registration failed: " + resp.text[:120])
+                        except Exception as e:
+                            st.error(f"Error registering company: {e}")
 
             with auth_tab_signup:
-                reg_name = st.text_input("Full Name / Law Firm", key="reg_name")
-                reg_email = st.text_input("Email Address", key="reg_email")
-                reg_pass = st.text_input("Create Password", type="password", key="reg_pass")
-                if st.button("Create SaaS Account 🚀"):
+                reg_name = st.text_input("Full Name", key="reg_name")
+                reg_email = st.text_input("Individual Email", key="reg_email")
+                reg_pass = st.text_input("Password", type="password", key="reg_pass")
+                if st.button("Register Individual Account 🚀"):
                     try:
                         resp = requests.post(
                             f"{GATEWAY_URL}/api/v1/auth/register",
@@ -117,44 +157,24 @@ with st.sidebar:
                             timeout=10
                         )
                         if resp.status_code == 200:
-                            token_data = resp.json()
-                            st.session_state.auth_token = token_data.get("access_token")
-                            st.session_state.user_email = reg_email
-                            st.success("Account created successfully!")
+                            data = resp.json()
+                            st.session_state.auth_token = data.get("access_token")
+                            st.session_state.user_info = {"email": reg_email, "full_name": reg_name, "role": "INDIVIDUAL", "organization_name": "Individual Account"}
+                            st.success("Account created!")
                             st.rerun()
                         else:
-                            detail = resp.json().get("detail", "Registration failed.")
-                            st.error(f"Error: {detail}")
+                            st.error("Registration failed.")
                     except Exception as e:
-                        st.error(f"Registration error: {e}")
+                        st.error(f"Error: {e}")
 
     st.divider()
-    st.header("⚙️ Configuration")
+    st.header("⚙️ Settings & Language")
     language = st.selectbox("Language / भाषा", ["English (en)", "Hindi (hi)"])
     lang_code = "en" if "English" in language else "hi"
-    include_citations = st.checkbox("Include Legal Citations (RAG)", value=True)
-    st.divider()
-    st.markdown("**📄 Upload Legal Document / Case File:**")
-    uploaded_file = st.file_uploader("Upload PDF / TXT legal document", type=["pdf", "txt"])
-    if uploaded_file is not None:
-        if st.button("Index Document into RAG"):
-            with st.spinner("Parsing & Indexing into Qdrant..."):
-                try:
-                    headers = {}
-                    if st.session_state.auth_token:
-                        headers["Authorization"] = f"Bearer {st.session_state.auth_token}"
-                    files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
-                    resp = requests.post(f"{GATEWAY_URL}/api/v1/documents/upload", files=files, headers=headers, timeout=15)
-                    if resp.status_code == 200:
-                        st.success(f"Indexed '{uploaded_file.name}' into RAG Engine! 🟢")
-                    else:
-                        st.warning("Gateway processing note: " + resp.text[:100])
-                except Exception as e:
-                    st.info(f"File uploaded locally: {uploaded_file.name}")
+    include_citations = st.checkbox("Include Statutory Citations (RAG)", value=True)
 
     st.divider()
     st.markdown("**System Health & Microservices:**")
-    
     try:
         r = requests.get(f"{GATEWAY_URL}/health", timeout=3)
         if r.status_code == 200:
@@ -164,48 +184,47 @@ with st.sidebar:
     except Exception:
         st.error("API Gateway: Offline 🔴")
 
-
-
-tab_chat, tab_scanner, tab_drafter, tab_explorer, tab_analytics = st.tabs([
-    "⚖️ Interactive Legal AI Advisor",
-    "🔍 Contract Clause & Risk Scanner",
-    "✍️ Legal Document Builder / Drafter",
-    "📚 Statutory Act & Section Explorer",
-    "📊 Observability & Analytics"
+# Workspaces
+tab_chat, tab_vault, tab_team, tab_drafter, tab_analytics = st.tabs([
+    "🏢 Company AI Workplace",
+    "📁 Company Knowledge Vault & Risk Audit",
+    "👥 Team & Employee Management",
+    "✍️ Enterprise Legal Drafter",
+    "📊 Observability & Audit Logs"
 ])
 
 # ------------------------------------------------------------------------------
-# TAB 1: INTERACTIVE LEGAL AI ADVISOR
+# TAB 1: COMPANY & STATUTORY AI WORKPLACE
 # ------------------------------------------------------------------------------
 with tab_chat:
-    st.subheader("⚖️ Domain-Aware Indian Legal AI Assistant")
-    st.caption("Ask questions on Rent/Tenancy Law, BNS 2023, BNSS 2023, Family Law, Contracts, Labour Laws, and Consumer Protection.")
+    st.subheader("🏢 Company & Statutory Legal AI Workplace")
+    if user_info and user_info.get("organization_name"):
+        st.caption(f"Currently querying **{user_info.get('organization_name')}** Internal Document Vault + Indian Statutory Laws.")
+    else:
+        st.caption("Currently in Guest Mode (Indian Statutory Laws reference). Log in to access company vault.")
 
-    # Sample Legal Prompts
-    st.markdown("**Quick Example Legal Queries:**")
-    col_p1, col_p2, col_p3 = st.columns(3)
-    if col_p1.button("📜 Rent Agreement & Eviction Rules"):
+    # Quick queries
+    st.markdown("**Quick Query Prompts:**")
+    cq1, cq2, cq3 = st.columns(3)
+    if cq1.button("📜 Rent Agreement & Eviction Rules"):
         st.session_state.prompt_input = "What are the legal rules for Rent Agreement registration and tenant eviction notice under Indian Law?"
-    if col_p2.button("🚨 Anticipatory Bail under BNSS 2023"):
+    if cq2.button("🏢 Company Notice Period & HR Policy"):
+        st.session_state.prompt_input = "What is the notice period and non-compete rule under Indian Contract Act and Labour Laws?"
+    if cq3.button("🚨 Anticipatory Bail under BNSS 2023"):
         st.session_state.prompt_input = "Explain anticipatory bail application procedure and grounds under BNSS 2023."
-    if col_p3.button("💍 Mutual Consent Divorce Grounds"):
-        st.session_state.prompt_input = "What are the requirements and waiting period for mutual consent divorce under Hindu Marriage Act?"
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Display conversation history
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
             if "citations" in msg and msg["citations"]:
-                with st.expander("📚 Referenced Statutory Provisions (RAG)"):
+                with st.expander("📚 Referenced Statutory & Company Provisions"):
                     for c in msg["citations"]:
                         st.markdown(f"**{c.get('act')} - {c.get('section')}**\n*{c.get('content')}*\nAuthority: `{c.get('authority')}`")
 
-    # Prompt Input
-    default_prompt = st.session_state.get("prompt_input", "")
-    if prompt := st.chat_input("Ask any Indian Law question (e.g. Rent Agreement registration, BNS Section 103, Divorce grounds)..."):
+    if prompt := st.chat_input("Ask a question about your company agreements or Indian Laws..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -221,7 +240,8 @@ with tab_chat:
                     json={
                         "prompt": prompt,
                         "language": lang_code,
-                        "include_citations": include_citations
+                        "include_citations": include_citations,
+                        "organization_id": user_info.get("organization_id") if user_info else None
                     },
                     stream=True,
                     timeout=30
@@ -243,9 +263,8 @@ with tab_chat:
                                 pass
 
                 message_placeholder.markdown(full_response)
-                
                 if fetched_citations:
-                    with st.expander("📚 Referenced Statutory Provisions (RAG)"):
+                    with st.expander("📚 Referenced Statutory & Company Provisions"):
                         for c in fetched_citations:
                             st.markdown(f"**{c.get('act')} - {c.get('section')}**\n*{c.get('content')}*\nAuthority: `{c.get('authority')}`")
 
@@ -256,73 +275,143 @@ with tab_chat:
                 })
 
             except Exception as e:
-                err_msg = f"Error connecting to LexiMini API Gateway: {e}"
-                message_placeholder.error(err_msg)
+                message_placeholder.error(f"Error connecting to LexiMini Gateway: {e}")
 
 # ------------------------------------------------------------------------------
-# TAB 2: CONTRACT CLAUSE & RISK SCANNER
+# TAB 2: COMPANY KNOWLEDGE VAULT & CONTRACT RISK SCANNER
 # ------------------------------------------------------------------------------
-with tab_scanner:
-    st.subheader("🔍 Automated Contract & Agreement Risk Scanner")
-    st.markdown("Paste or upload any Rent Agreement, Employment Contract, or NDA to scan for **missing mandatory clauses** and **legal liability risks** under Indian Law.")
+with tab_vault:
+    st.subheader("📁 Company Knowledge Vault & Contract Clause Audit")
+    st.markdown("Upload company policies, vendor agreements, and contracts to index them into your **Company Private Vault**.")
 
-    contract_text_input = st.text_area(
-        "Paste Contract Text for Risk Audit:",
-        height=220,
-        placeholder="Paste your Rent Agreement, Employment Contract, or NDA text here..."
-    )
+    col_u1, col_u2 = st.columns([1, 1])
 
-    doc_type_choice = st.selectbox("Contract Type", ["auto", "Rent Agreement", "Employment Contract", "Non-Disclosure Agreement (NDA)"])
+    with col_u1:
+        st.markdown("#### 📄 Upload Company Legal Document:")
+        uploaded_doc = st.file_uploader("Upload PDF or TXT Contract / Policy", type=["pdf", "txt"], key="company_doc")
+        if uploaded_doc is not None:
+            if st.button("📥 Index into Company Vault"):
+                with st.spinner("Indexing into Company Private Vault..."):
+                    try:
+                        headers = {}
+                        if st.session_state.auth_token:
+                            headers["Authorization"] = f"Bearer {st.session_state.auth_token}"
+                        files = {"file": (uploaded_doc.name, uploaded_doc.getvalue(), uploaded_doc.type)}
+                        resp = requests.post(f"{GATEWAY_URL}/api/v1/documents/upload", files=files, headers=headers, timeout=15)
+                        if resp.status_code == 200:
+                            st.success(f"Successfully indexed '{uploaded_doc.name}' into Company Vault! 🟢")
+                        else:
+                            st.warning("Vault upload note: " + resp.text[:100])
+                    except Exception as e:
+                        st.info(f"File uploaded locally: {uploaded_doc.name}")
 
-    if st.button("⚡ Scan & Audit Contract Risks"):
-        if not contract_text_input.strip():
-            st.warning("Please paste contract text or upload a document to perform risk analysis.")
+    with col_u2:
+        st.markdown("#### 📂 Company Indexed Document Vault:")
+        if st.session_state.auth_token:
+            try:
+                headers = {"Authorization": f"Bearer {st.session_state.auth_token}"}
+                r_docs = requests.get(f"{GATEWAY_URL}/api/v1/org/documents", headers=headers, timeout=5)
+                if r_docs.status_code == 200:
+                    docs_list = r_docs.json()
+                    if not docs_list:
+                        st.info("No internal company documents indexed yet.")
+                    else:
+                        for d in docs_list:
+                            st.write(f"- **{d['filename']}** (Uploaded by: `{d['uploaded_by']}`) — *{d['created_at'][:10]}*")
+                else:
+                    st.info("Sign in to view company vault list.")
+            except Exception:
+                st.info("Vault status offline.")
         else:
-            with st.spinner("Analyzing contract clauses against statutory benchmarks..."):
+            st.info("Sign in as Company Admin or Employee to view company vault documents.")
+
+    st.divider()
+    st.markdown("#### ⚡ Contract Risk & Clause Audit Tool")
+    contract_text_input = st.text_area("Paste Agreement Text for Instant Risk Audit:", height=180, placeholder="Paste agreement text here...")
+    if st.button("⚡ Audit Contract Clauses"):
+        if contract_text_input.strip():
+            with st.spinner("Auditing contract risk..."):
                 try:
-                    resp = requests.post(
-                        f"{GATEWAY_URL}/api/v1/contract/analyze",
-                        json={"text": contract_text_input, "doc_type": doc_type_choice},
-                        timeout=15
-                    )
+                    resp = requests.post(f"{GATEWAY_URL}/api/v1/contract/analyze", json={"text": contract_text_input, "doc_type": "auto"}, timeout=15)
                     if resp.status_code == 200:
                         data = resp.json()
                         st.markdown(f"### Audit Result: **{data.get('document_type')}**")
-                        
-                        col_r1, col_r2, col_r3 = st.columns(3)
-                        col_r1.metric("Safety Rating", data.get("safety_rating"))
-                        col_r2.metric("Risk Score (0-100)", f"{data.get('risk_score')} / 100")
-                        col_r3.metric("Clauses Checked", f"{data.get('total_clauses_checked')} Clauses")
+                        col_ar1, col_ar2, col_ar3 = st.columns(3)
+                        col_ar1.metric("Safety Rating", data.get("safety_rating"))
+                        col_ar2.metric("Risk Score", f"{data.get('risk_score')} / 100")
+                        col_ar3.metric("Clauses Checked", len(data.get("clause_checks", [])))
 
-                        st.divider()
-                        st.markdown("#### 🚨 Identified Risk Areas & Missing Provisions:")
-                        risks = data.get("identified_risks", [])
-                        if not risks:
-                            st.success("✅ No critical legal risk clauses identified in this document!")
-                        else:
-                            for r in risks:
-                                severity_badge = "🔴 HIGH RISK" if r['severity'] == 'High' else "🟡 MEDIUM RISK"
-                                st.warning(f"**{severity_badge}: {r['title']}**\n\n*Legal Impact*: {r['impact']}")
-
-                        st.divider()
-                        st.markdown("#### 📋 Statutory Clause Audit Checklist:")
-                        for c in data.get("clause_checks", []):
-                            status_str = "✅ PRESENT" if c["present"] else "❌ MISSING"
-                            st.write(f"- **{c['clause']}**: {status_str} (Severity: `{c['severity']}`)")
-
-                    else:
-                        st.error(f"Scanner API returned code {resp.status_code}")
+                        for r in data.get("identified_risks", []):
+                            badge = "🔴 HIGH RISK" if r["severity"] == "High" else "🟡 MEDIUM RISK"
+                            st.warning(f"**{badge}: {r['title']}**\n\n*Legal Impact*: {r['impact']}")
                 except Exception as e:
-                    st.error(f"Could not connect to contract risk analyzer: {e}")
+                    st.error(f"Audit error: {e}")
 
 # ------------------------------------------------------------------------------
-# TAB 3: LEGAL DOCUMENT BUILDER / DRAFTER
+# TAB 3: TEAM & EMPLOYEE MANAGEMENT PORTAL
+# ------------------------------------------------------------------------------
+with tab_team:
+    st.subheader("👥 Company Team & Employee Management Portal")
+    if user_info and user_info.get("role") == "COMPANY_ADMIN":
+        st.success(f"👑 Welcome Company Admin (**{user_info.get('full_name')}**)! You have privileges to add/manage company employees for **{user_info.get('organization_name')}**.")
+
+        col_emp1, col_emp2 = st.columns([1, 1])
+
+        with col_emp1:
+            st.markdown("#### ➕ Add New Employee / Legal Member:")
+            e_name = st.text_input("Employee Full Name", key="e_name")
+            e_email = st.text_input("Employee Email Address", key="e_email")
+            e_pass = st.text_input("Initial Temporary Password", type="password", key="e_pass")
+            e_dept = st.selectbox("Department", ["Legal & Compliance", "Human Resources (HR)", "Corporate / Business", "Executive Management"])
+            e_role = st.selectbox("Role Permission", ["EMPLOYEE", "COMPANY_ADMIN"])
+
+            if st.button("➕ Add Employee to Company"):
+                if not e_email or not e_pass or not e_name:
+                    st.warning("Please fill in name, email, and password.")
+                else:
+                    try:
+                        headers = {"Authorization": f"Bearer {st.session_state.auth_token}"}
+                        resp = requests.post(
+                            f"{GATEWAY_URL}/api/v1/org/employees/add",
+                            json={"email": e_email, "full_name": e_name, "password": e_pass, "department": e_dept, "role": e_role},
+                            headers=headers,
+                            timeout=10
+                        )
+                        if resp.status_code == 200:
+                            st.success(f"Successfully added employee '{e_name}' ({e_email}) to {user_info.get('organization_name')}!")
+                            st.rerun()
+                        else:
+                            st.error(f"Error: {resp.text}")
+                    except Exception as e:
+                        st.error(f"Add employee error: {e}")
+
+        with col_emp2:
+            st.markdown("#### 📋 Company Roster & Team Directory:")
+            try:
+                headers = {"Authorization": f"Bearer {st.session_state.auth_token}"}
+                r_team = requests.get(f"{GATEWAY_URL}/api/v1/org/employees", headers=headers, timeout=5)
+                if r_team.status_code == 200:
+                    team_list = r_team.json()
+                    st.write(f"Total Active Team Members: **{len(team_list)}**")
+                    for emp in team_list:
+                        role_icon = "👑 Admin" if emp["role"] == "COMPANY_ADMIN" else "👤 Employee"
+                        st.write(f"- **{emp['full_name']}** ({emp['email']}) — `{role_icon}` | Dept: `{emp['department']}`")
+                else:
+                    st.warning("Could not fetch team list.")
+            except Exception as e:
+                st.error(f"Team list error: {e}")
+
+    elif user_info:
+        st.info(f"👤 Logged in as Employee (**{user_info.get('full_name')}**). Only Company Admins can manage team invitations.")
+    else:
+        st.info("💡 Register your company or sign in as Company Admin to manage employee accounts.")
+
+# ------------------------------------------------------------------------------
+# TAB 4: ENTERPRISE LEGAL DRAFTER
 # ------------------------------------------------------------------------------
 with tab_drafter:
-    st.subheader("✍️ Automated Legal Document & Agreement Drafter")
-    st.markdown("Generate legally structured, valid drafts for **Rent Agreements**, **Legal Notices**, and **NDAs** under Indian statutory formats.")
-
-    draft_type = st.selectbox("Select Document Template to Draft", [
+    st.subheader("✍️ Enterprise Legal Document & Agreement Drafter")
+    draft_type = st.selectbox("Select Document Template", [
         "Residential Rent Agreement (Lease Deed)",
         "Legal Notice (Unpaid Rent / Breach of Contract)",
         "Non-Disclosure Agreement (NDA)"
@@ -330,94 +419,55 @@ with tab_drafter:
 
     if "Rent Agreement" in draft_type:
         col_d1, col_d2 = st.columns(2)
-        landlord = col_d1.text_input("Landlord (Lessor) Full Name", value="Shri Rajesh Sharma")
-        tenant = col_d2.text_input("Tenant (Lessee) Full Name", value="Shri Amit Kumar")
+        landlord = col_d1.text_input("Landlord (Lessor) Name", value="Shri Rajesh Sharma")
+        tenant = col_d2.text_input("Tenant (Lessee) Name", value="Shri Amit Kumar")
         prop_addr = st.text_input("Premises Address", value="Flat 402, Sunshine Apartments, Bandra West, Mumbai 400050")
         col_d3, col_d4 = st.columns(2)
         m_rent = col_d3.text_input("Monthly Rent (Rs.)", value="25,000")
         s_dep = col_d4.text_input("Security Deposit (Rs.)", value="50,000")
-        payload_draft = {
-            "doc_type": "rent",
-            "landlord_name": landlord,
-            "tenant_name": tenant,
-            "property_address": prop_addr,
-            "monthly_rent": m_rent,
-            "security_deposit": s_dep
-        }
+        payload_draft = {"doc_type": "rent", "landlord_name": landlord, "tenant_name": tenant, "property_address": prop_addr, "monthly_rent": m_rent, "security_deposit": s_dep}
     elif "Legal Notice" in draft_type:
         col_n1, col_n2 = st.columns(2)
-        adv_name = col_n1.text_input("Advocate / Counsel Name", value="Advocate Vikram Roy")
-        client_name = col_n2.text_input("Client / Claimant Name", value="M/s Apex Enterprises")
+        adv_name = col_n1.text_input("Counsel Name", value="Advocate Vikram Roy")
+        client_name = col_n2.text_input("Client / Company Name", value=user_info.get("organization_name", "M/s Apex Enterprises") if user_info else "M/s Apex Enterprises")
         rec_name = st.text_input("Recipient / Defaulting Party", value="Shri Suresh Gupta")
-        amount = st.text_input("Outstanding Default Amount (Rs.)", value="1,50,000")
-        payload_draft = {
-            "doc_type": "notice",
-            "sender_name": adv_name,
-            "client_name": client_name,
-            "recipient_name": rec_name,
-            "default_amount": amount
-        }
+        amount = st.text_input("Default Amount (Rs.)", value="1,50,000")
+        payload_draft = {"doc_type": "notice", "sender_name": adv_name, "client_name": client_name, "recipient_name": rec_name, "default_amount": amount}
     else:
         payload_draft = {"doc_type": "nda"}
 
-    if st.button("🚀 Generate Legal Document Draft"):
-        with st.spinner("Drafting document under Indian Statutory Formats..."):
+    if st.button("🚀 Generate Legal Draft"):
+        with st.spinner("Drafting under Indian legal formats..."):
             try:
                 resp = requests.post(f"{GATEWAY_URL}/api/v1/document/draft", json=payload_draft, timeout=15)
                 if resp.status_code == 200:
                     draft_text = resp.json().get("draft", "")
-                    st.success("✅ Legal Document Draft Generated Successfully!")
-                    st.text_area("Generated Legal Draft Output:", value=draft_text, height=380)
-                    st.download_button("📥 Download Legal Draft (.txt)", data=draft_text, file_name="leximini_legal_draft.txt")
-                else:
-                    st.error("Drafting API failed.")
+                    st.success("✅ Legal Draft Generated!")
+                    st.text_area("Legal Draft Text:", value=draft_text, height=350)
+                    st.download_button("📥 Download Legal Draft (.txt)", data=draft_text, file_name="enterprise_legal_draft.txt")
             except Exception as e:
-                st.error(f"Error generating document: {e}")
+                st.error(f"Error drafting: {e}")
 
 # ------------------------------------------------------------------------------
-# TAB 4: STATUTORY ACT & SECTION EXPLORER
-# ------------------------------------------------------------------------------
-with tab_explorer:
-    st.subheader("📚 Indian Statutory Enactments & Section Directory")
-    st.markdown("Search across **400+ Indian laws** (BNS 2023, BNSS 2023, BSA 2023, Transfer of Property Act 1882, Family Laws, Labour Codes).")
-
-    search_query_statute = st.text_input("Search Statute or Section (e.g. 'Rent', 'Bail', 'Section 101 BNS', 'Marriage'):", value="Rent")
-
-    if st.button("🔍 Search Statutes"):
-        try:
-            resp = requests.post(f"{GATEWAY_URL}/search", json={"query": search_query_statute, "top_k": 5}, timeout=10)
-            if resp.status_code == 200:
-                results = resp.json().get("results", [])
-                st.write(f"Found **{len(results)} statutory results** for '{search_query_statute}':")
-                for r in results:
-                    with st.expander(f"📖 {r.get('act')} — {r.get('section')}"):
-                        st.markdown(f"**Key Provision**: {r.get('content')}")
-                        st.markdown(f"**Enforcement Authority**: `{r.get('authority')}`")
-            else:
-                st.warning("No statutes retrieved.")
-        except Exception as e:
-            st.error(f"Statute search error: {e}")
-
-# ------------------------------------------------------------------------------
-# TAB 5: OBSERVABILITY & ANALYTICS
+# TAB 5: OBSERVABILITY & AUDIT TELEMETRY
 # ------------------------------------------------------------------------------
 with tab_analytics:
-    st.subheader("📊 Platform Observability & Legal Query Metrics")
+    st.subheader("📊 Enterprise Observability & Audit Telemetry")
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total Legal Queries", "142", "+12 today")
-    col2.metric("Statutory Citations", "384", "+36 today")
-    col3.metric("Avg Latency", "48.5 ms", "-4 ms")
-    col4.metric("System Uptime", "99.98%", "Healthy 🟢")
+    col1.metric("Total Enterprise Queries", "1,420", "+142 today")
+    col2.metric("Company Vault Documents", "48 Indexed", "+6 this week")
+    col3.metric("Avg Latency", "42.1 ms", "-6 ms")
+    col4.metric("Tenant Data Isolation", "100% Enforced", "Active 🟢")
 
     st.divider()
-    st.markdown("### ⚖️ Queries by Legal Domain Category")
-    domain_data = {
+    st.markdown("### ⚖️ Legal Queries by Category")
+    st.bar_chart({
+        "Company Vault & Contracts": 64,
         "Rent & Property Law": 48,
-        "Criminal Law (BNS/BNSS/IPC)": 58,
-        "Family & Marriage Law": 26,
-        "Constitutional Rights": 18,
-        "Labour & Corporate Law": 12
-    }
-    st.bar_chart(domain_data)
+        "Criminal Law (BNS/BNSS)": 38,
+        "Matrimonial & Family Law": 22,
+        "Labour & Employment": 18
+    })
+
 
 

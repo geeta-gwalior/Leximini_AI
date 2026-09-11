@@ -55,3 +55,13 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+async def get_current_org_admin(
+    current_user: Optional[User] = Depends(get_current_user)
+) -> User:
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    if current_user.role != "COMPANY_ADMIN":
+        raise HTTPException(status_code=403, detail="Company Admin privileges required for this action.")
+    return current_user
+

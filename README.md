@@ -26,11 +26,12 @@ Most legal AI tools are general-purpose — they hallucinate section numbers, co
 - **Family, Labour & Consumer Laws**: Hindu Marriage Act 1955, Special Marriage Act 1954, Consumer Protection Act 2019, Code on Wages 2019.
 
 ### Key Platform Modules:
-1. ⚖️ **Domain-Aware Legal AI Assistant**: Multi-turn SSE streaming legal chat with statutory citations and multi-domain reasoning.
-2. 🔍 **Contract Clause & Risk Scanner**: Automated risk audit of Rent Agreements, Employment Contracts & NDAs with 0-100 Risk Scoring.
-3. ✍️ **Automated Legal Document Drafter**: Instant generator for Rent Agreements, Legal Notices, and NDAs under Indian statutory formats.
-4. 📚 **Statutory Act & Section Directory**: Instant search directory across 400+ Indian statutory enactments.
-5. 🔑 **SaaS User Authentication & Session Portal**: JWT Auth, User Registration, Login, and Pro Plan Tier Management.
+1. 🏢 **B2B Multi-Tenant Enterprise Architecture**: Full tenant isolation with Organization Vaults, Role-Based Access Control (`COMPANY_ADMIN`, `EMPLOYEE`), and Audit Logging.
+2. ⚖️ **Domain-Aware Legal AI Assistant**: Multi-turn SSE streaming legal chat with statutory citations and multi-domain reasoning (Rent/Tenancy, BNS/BNSS, Contracts, Labour & Corporate Laws).
+3. 🔒 **Enterprise Document Vault & RAG**: Multi-tenant vector retrieval isolated by `organization_id` payload filters in Qdrant.
+4. 🔍 **Contract Clause & Risk Scanner**: Automated risk audit of Rent Agreements, Employment Contracts & NDAs with 0-100 Risk Scoring.
+5. ✍️ **Automated Legal Document Drafter**: Instant generator for Rent Agreements, Legal Notices, and NDAs under Indian statutory formats.
+6. 👥 **Team Management & Role Control**: Admin dashboard for inviting team employees, assigning department scopes, and managing organizational access.
 
 ---
 
