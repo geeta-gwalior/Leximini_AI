@@ -23,7 +23,7 @@ jobs:
       - name: Install All Microservice Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-asyncio aiosqlite httpx sqlalchemy pydantic pydantic-settings passlib[bcrypt] python-jose[cryptography] pandas rank-bm25 pypdf python-multipart
+          pip install pytest pytest-asyncio aiosqlite httpx sqlalchemy pydantic pydantic-settings passlib[bcrypt] bcrypt python-jose[cryptography] pandas rank-bm25 pypdf python-multipart qdrant-client fastapi uvicorn requests
 
       - name: Run Pytest Test Suite
         run: |
