@@ -7,6 +7,9 @@ from services.rag_engine.qdrant_client import init_qdrant_collection
 from services.rag_engine.hybrid_search import HybridLegalSearch
 from services.rag_engine.ingest import ingest_laws, DATA_PATH
 from services.rag_engine.pdf_parser import extract_text_from_pdf_bytes, chunk_legal_text
+from services.rag_engine.contract_analyzer import contract_analyzer
+from services.rag_engine.document_drafter import document_drafter
+
 
 app = FastAPI(title="LexiMini Legal RAG Engine", version="1.0.0")
 
@@ -87,7 +90,52 @@ async def upload_pdf_document(file: UploadFile = File(...)):
         "sample_chunk": chunks[0]["content"] if chunks else ""
     }
 
+class ContractAnalyzeRequest(BaseModel):
+    text: str
+    doc_type: str = "auto"
+
+class DraftRequest(BaseModel):
+    doc_type: str
+    landlord_name: Optional[str] = "Shri Rajesh Sharma"
+    tenant_name: Optional[str] = "Shri Amit Kumar"
+    property_address: Optional[str] = "Flat 402, Sunshine Apartments, Bandra West, Mumbai 400050"
+    monthly_rent: Optional[str] = "25000"
+    security_deposit: Optional[str] = "50000"
+    sender_name: Optional[str] = "Advocate Vikram Roy"
+    client_name: Optional[str] = "M/s Apex Enterprises"
+    recipient_name: Optional[str] = "Shri Suresh Gupta"
+    default_amount: Optional[str] = "1,50,000"
+
+@app.post("/contract/analyze")
+async def analyze_contract_risk(req: ContractAnalyzeRequest):
+    return contract_analyzer.analyze_contract(text=req.text, doc_type=req.doc_type)
+
+@app.post("/document/draft")
+async def draft_legal_document(req: DraftRequest):
+    if "rent" in req.doc_type.lower() or "lease" in req.doc_type.lower():
+        draft_text = document_drafter.draft_rent_agreement(
+            landlord_name=req.landlord_name,
+            tenant_name=req.tenant_name,
+            property_address=req.property_address,
+            monthly_rent=req.monthly_rent,
+            security_deposit=req.security_deposit
+        )
+    elif "notice" in req.doc_type.lower():
+        draft_text = document_drafter.draft_legal_notice(
+            sender_name=req.sender_name,
+            client_name=req.client_name,
+            recipient_name=req.recipient_name,
+            default_amount=req.default_amount
+        )
+    elif "nda" in req.doc_type.lower():
+        draft_text = document_drafter.draft_nda()
+    else:
+        draft_text = document_drafter.draft_rent_agreement()
+
+    return {"doc_type": req.doc_type, "draft": draft_text}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("services.rag_engine.main:app", host="0.0.0.0", port=8001, reload=True)
+
 

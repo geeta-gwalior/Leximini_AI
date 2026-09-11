@@ -19,13 +19,18 @@
 
 Most legal AI tools are general-purpose — they hallucinate section numbers, confuse repealed IPC sections with the new **Bharatiya Nyaya Sanhita (BNS) 2023**, and give vague answers without citing the right authority.
 
-**LexiMini AI** is different. It is trained specifically on Indian law:
-- Bharatiya Nyaya Sanhita (BNS) 2023
-- Bharatiya Nagarik Suraksha Sanhita (BNSS) 2023
-- Indian Penal Code (IPC)
-- Family Law, Labour Law, Constitutional Provisions
+**LexiMini AI** is trained and structured specifically on Indian jurisprudence:
+- **Rent & Property Laws**: Transfer of Property Act 1882, Model Tenancy Act 2021, Indian Registration Act 1908, Indian Stamp Act 1899.
+- **Criminal Code**: Bharatiya Nyaya Sanhita (BNS) 2023, Bharatiya Nagarik Suraksha Sanhita (BNSS) 2023, Bharatiya Sakshya Adhiniyam (BSA) 2023.
+- **Civil & Commercial Laws**: Indian Contract Act 1872, Commercial Courts Act 2015, Arbitration & Conciliation Act 1996.
+- **Family, Labour & Consumer Laws**: Hindu Marriage Act 1955, Special Marriage Act 1954, Consumer Protection Act 2019, Code on Wages 2019.
 
-It **answers in Hindi and English**, **cites actual section numbers**, and **names the relevant enforcement authority** — powered by a fine-tuned Gemma model distilled into a lightweight 1B model deployable anywhere.
+### Key Platform Modules:
+1. ⚖️ **Domain-Aware Legal AI Assistant**: Multi-turn SSE streaming legal chat with statutory citations and multi-domain reasoning.
+2. 🔍 **Contract Clause & Risk Scanner**: Automated risk audit of Rent Agreements, Employment Contracts & NDAs with 0-100 Risk Scoring.
+3. ✍️ **Automated Legal Document Drafter**: Instant generator for Rent Agreements, Legal Notices, and NDAs under Indian statutory formats.
+4. 📚 **Statutory Act & Section Directory**: Instant search directory across 400+ Indian statutory enactments.
+5. 🔑 **SaaS User Authentication & Session Portal**: JWT Auth, User Registration, Login, and Pro Plan Tier Management.
 
 ---
 
@@ -37,23 +42,26 @@ It **answers in Hindi and English**, **cites actual section numbers**, and **nam
                     └────────────┬─────────────────┘
                                  │
                     ┌────────────▼─────────────────┐
-                    │   Streamlit Web UI  :8501     │
+                    │  Streamlit Workplace  :8501   │
+                    │  • 5 Enterprise Legal Modules │
+                    │  • SaaS Auth & User Portal    │
                     └────────────┬─────────────────┘
                                  │
                     ┌────────────▼─────────────────┐
                     │  FastAPI API Gateway  :8000   │
-                    │  • JWT Auth                   │
+                    │  • JWT Auth & SaaS Sessions   │
                     │  • Redis Rate Limiting        │
                     │  • SSE Chat Streaming         │
-                    │  • PostgreSQL Session Store   │
+                    │  • Contract Risk & Draft APIs │
                     └────┬──────────────┬───────────┘
                          │              │
           ┌──────────────▼──┐    ┌──────▼────────────────┐
           │  Hybrid RAG     │    │  Model Server  :8002   │
-          │  Engine  :8001  │    │  • OpenAI-compatible   │
-          │  • BM25 Search  │    │  • Streaming Completions│
-          │  • Qdrant Dense │    │  • Ollama / vLLM proxy  │
-          │  • PDF OCR      │    └───────────────────────┘
+          │  Engine  :8001  │    │  • Domain Legal AI    │
+          │  • BM25 Search  │    │  • Streaming Generator│
+          │  • Qdrant Dense │    │  • Ollama / vLLM proxy│
+          │  • Risk Scanner │    └───────────────────────┘
+          │  • Document Draft│
           └──────┬──────────┘
                  │
      ┌───────────▼──────────┐
@@ -63,6 +71,7 @@ It **answers in Hindi and English**, **cites actual section numbers**, and **nam
 ```
 
 ---
+
 
 ---
 

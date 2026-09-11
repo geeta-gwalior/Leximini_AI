@@ -8,10 +8,11 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
-    DATABASE_URL: str = "postgresql+asyncpg://leximini:leximini_pass@postgres:5432/leximinidb"
-    REDIS_URL: str = "redis://redis:6379/0"
-    RAG_SERVICE_URL: str = "http://rag_engine:8001"
-    MODEL_SERVER_URL: str = "http://model_server:8002"
+    DATABASE_URL: str = "postgresql+asyncpg://leximini:leximini_pass@localhost:5432/leximinidb"
+    REDIS_URL: str = "redis://localhost:6379/0"
+    RAG_SERVICE_URL: str = "http://localhost:8001"
+    MODEL_SERVER_URL: str = "http://localhost:8002"
+
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

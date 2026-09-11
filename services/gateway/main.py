@@ -23,15 +23,15 @@ from services.gateway.auth import (
 from services.gateway.rate_limiter import rate_limiter
 from services.gateway.analytics import analytics_engine
 
-@app.get(f"{settings.API_V1_STR}/analytics/dashboard")
-async def get_analytics():
-    return analytics_engine.get_dashboard_metrics()
-
-
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+@app.get(f"{settings.API_V1_STR}/analytics/dashboard")
+async def get_analytics():
+    return analytics_engine.get_dashboard_metrics()
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -168,7 +168,26 @@ async def upload_legal_document(file: UploadFile = File(...)):
     except Exception as e:
         return {"filename": file.filename, "status": "processed", "note": f"Document received at Gateway. {e}"}
 
+@app.post(f"{settings.API_V1_STR}/contract/analyze")
+async def analyze_contract_gateway(payload: dict):
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(f"{settings.RAG_SERVICE_URL}/contract/analyze", json=payload)
+            return resp.json()
+    except Exception as e:
+        return {"error": f"Contract analysis service unavailable: {e}"}
+
+@app.post(f"{settings.API_V1_STR}/document/draft")
+async def draft_document_gateway(payload: dict):
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(f"{settings.RAG_SERVICE_URL}/document/draft", json=payload)
+            return resp.json()
+    except Exception as e:
+        return {"error": f"Document drafting service unavailable: {e}"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("services.gateway.main:app", host="0.0.0.0", port=8000, reload=True)
+
 

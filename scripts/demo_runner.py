@@ -20,23 +20,29 @@ def start_services():
 
     processes = []
 
+    env = os.environ.copy()
+    env["GATEWAY_URL"] = "http://localhost:8000"
+    env["RAG_SERVICE_URL"] = "http://localhost:8001"
+    env["MODEL_SERVER_URL"] = "http://localhost:8002"
+
     try:
         print("[1/4] Starting FastAPI API Gateway on http://localhost:8000...")
-        p_gateway = subprocess.Popen([sys.executable, "-m", "uvicorn", "services.gateway.main:app", "--port", "8000", "--host", "0.0.0.0"])
+        p_gateway = subprocess.Popen([sys.executable, "-m", "uvicorn", "services.gateway.main:app", "--port", "8000", "--host", "0.0.0.0"], env=env)
         processes.append(p_gateway)
 
         print("[2/4] Starting Hybrid RAG Engine on http://localhost:8001...")
-        p_rag = subprocess.Popen([sys.executable, "-m", "uvicorn", "services.rag_engine.main:app", "--port", "8001", "--host", "0.0.0.0"])
+        p_rag = subprocess.Popen([sys.executable, "-m", "uvicorn", "services.rag_engine.main:app", "--port", "8001", "--host", "0.0.0.0"], env=env)
         processes.append(p_rag)
 
         print("[3/4] Starting Model Server Engine on http://localhost:8002...")
-        p_model = subprocess.Popen([sys.executable, "-m", "uvicorn", "services.model_server.main:app", "--port", "8002", "--host", "0.0.0.0"])
+        p_model = subprocess.Popen([sys.executable, "-m", "uvicorn", "services.model_server.main:app", "--port", "8002", "--host", "0.0.0.0"], env=env)
         processes.append(p_model)
 
         time.sleep(2)
         print("[4/4] Starting Streamlit Web App on http://localhost:8501...")
-        p_web = subprocess.Popen([sys.executable, "-m", "streamlit", "run", "apps/web/app.py", "--server.port", "8501"])
+        p_web = subprocess.Popen([sys.executable, "-m", "streamlit", "run", "apps/web/app.py", "--server.port", "8501"], env=env)
         processes.append(p_web)
+
 
         print("\n[Success] All LexiMini AI Microservices are live!")
         print("  - Web Interface:    http://localhost:8501")
