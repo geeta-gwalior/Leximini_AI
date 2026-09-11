@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
 LexiMini AI — Standalone Live Demo Runner
-Launches Gateway (8000), RAG Engine (8001), Model Server (8002), and Streamlit Web UI (8501).
+Launches Gateway (8000), RAG Engine (8001), Model Server (8002), and React Enterprise Web UI (3000).
 """
 
 import subprocess
 import sys
 import time
 import os
-import signal
 
 def start_services():
     print("=================================================================")
@@ -39,13 +38,12 @@ def start_services():
         processes.append(p_model)
 
         time.sleep(2)
-        print("[4/4] Starting Streamlit Web App on http://localhost:8501...")
-        p_web = subprocess.Popen([sys.executable, "-m", "streamlit", "run", "apps/web/app.py", "--server.port", "8501"], env=env)
+        print("[4/4] Starting React Enterprise Web App on http://localhost:3000...")
+        p_web = subprocess.Popen(["npm", "--prefix", "apps/web", "run", "dev"], env=env)
         processes.append(p_web)
 
-
         print("\n[Success] All LexiMini AI Microservices are live!")
-        print("  - Web Interface:    http://localhost:8501")
+        print("  - React Web UI:     http://localhost:3000")
         print("  - API Gateway Docs: http://localhost:8000/docs")
         print("  - RAG Engine Docs:  http://localhost:8001/docs")
         print("  - Model Server:     http://localhost:8002/docs")
@@ -58,7 +56,9 @@ def start_services():
         print("\n[Shutdown] Terminating all microservices safely...")
         for p in processes:
             p.terminate()
-        print("[Shutdown] Terminated.")
+        for p in processes:
+            p.wait()
+        print("[Shutdown] Completed.")
 
 if __name__ == "__main__":
     start_services()

@@ -26,12 +26,12 @@ Most legal AI tools are general-purpose — they hallucinate section numbers, co
 - **Family, Labour & Consumer Laws**: Hindu Marriage Act 1955, Special Marriage Act 1954, Consumer Protection Act 2019, Code on Wages 2019.
 
 ### Key Platform Modules:
-1. 🏢 **B2B Multi-Tenant Enterprise Architecture**: Full tenant isolation with Organization Vaults, Role-Based Access Control (`COMPANY_ADMIN`, `EMPLOYEE`), and Audit Logging.
-2. ⚖️ **Domain-Aware Legal AI Assistant**: Multi-turn SSE streaming legal chat with statutory citations and multi-domain reasoning (Rent/Tenancy, BNS/BNSS, Contracts, Labour & Corporate Laws).
-3. 🔒 **Enterprise Document Vault & RAG**: Multi-tenant vector retrieval isolated by `organization_id` payload filters in Qdrant.
-4. 🔍 **Contract Clause & Risk Scanner**: Automated risk audit of Rent Agreements, Employment Contracts & NDAs with 0-100 Risk Scoring.
-5. ✍️ **Automated Legal Document Drafter**: Instant generator for Rent Agreements, Legal Notices, and NDAs under Indian statutory formats.
-6. 👥 **Team Management & Role Control**: Admin dashboard for inviting team employees, assigning department scopes, and managing organizational access.
+1. 🏢 **React (Vite) B2B Multi-Tenant Web Portal**: High-performance corporate web interface built with React 18 & Tailwind CSS.
+2. 📄 **Public Guest Legal Suite**: Allows individual guest users to upload rent agreements & NDAs for instant breakdown, clause risk scoring, document drafting, and streaming legal AI chat directly from the homepage without logging in.
+3. 🔒 **Isolated Company Vault & RAG**: Multi-tenant vector retrieval isolated by `organization_id` payload filters in Qdrant.
+4. 🏢 **Dedicated Organization Setup & RBAC**: Admin registration page with Enterprise Governance SLA & DPDP 2023 compliance panel.
+5. 🔍 **Contract Clause & Risk Scanner**: Automated risk audit of Rent Agreements, Employment Contracts & NDAs with 0-100 Risk Scoring.
+6. ✍️ **Automated Legal Document Drafter**: Instant generator for Rent Agreements, Legal Notices, and NDAs under Indian statutory formats.
 
 ---
 
@@ -43,9 +43,10 @@ Most legal AI tools are general-purpose — they hallucinate section numbers, co
                     └────────────┬─────────────────┘
                                  │
                     ┌────────────▼─────────────────┐
-                    │  Streamlit Workplace  :8501   │
-                    │  • 5 Enterprise Legal Modules │
-                    │  • SaaS Auth & User Portal    │
+                    │   React (Vite) Web App :3000 │
+                    │   • Public Guest Legal Suite │
+                    │   • Company Reg & Login      │
+                    │   • Enterprise Dashboard     │
                     └────────────┬─────────────────┘
                                  │
                     ┌────────────▼─────────────────┐
