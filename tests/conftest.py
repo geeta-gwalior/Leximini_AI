@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from typing import AsyncGenerator
@@ -15,12 +14,6 @@ TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 engine_test = create_async_engine(TEST_DATABASE_URL, echo=False)
 AsyncSessionTest = async_sessionmaker(engine_test, class_=AsyncSession, expire_on_commit=False)
-
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
 
 @pytest.fixture
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
