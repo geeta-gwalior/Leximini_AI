@@ -9,7 +9,7 @@ COLLECTION_NAME = "indian_laws"
 VECTOR_SIZE = 384  # MiniLM-L6-v2 vector dimension
 
 def get_qdrant_client() -> QdrantClient:
-    return QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+    return QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT, timeout=1.0)
 
 def init_qdrant_collection():
     client = get_qdrant_client()
