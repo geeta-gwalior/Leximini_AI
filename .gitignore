@@ -1,8 +1,39 @@
+# Python & Environments
+.venv/
 venv/
+ENV/
+env/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Environment Variables & Secrets
 .env
+.env.local
+!.env.example
+
+# Node / Web Frontend
+node_modules/
+dist/
+build/
+.npm/
+
+# Archives & Temporary Data
+*.tar.gz
+*.zip
+*.tar
+*.log
 leximini_data/
 *.ckpt
 *.bin
 model_weights/
+
+# IDE & System Files
+.DS_Store
+.vscode/
+.idea/
