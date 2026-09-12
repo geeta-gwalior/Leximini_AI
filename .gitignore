@@ -27,6 +27,7 @@ build/
 *.tar.gz
 *.zip
 *.tar
+*.bundle
 *.log
 leximini_data/
 *.ckpt
