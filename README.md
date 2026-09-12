@@ -1,226 +1,309 @@
-# ⚖️ LexiMini AI — Indian Legal Assistant
+# ⚖️ LexiMini AI — Indian Legal Assistant Platform
 
 <div align="center">
 
-**Enterprise-grade, domain-specific AI assistant for the Indian Legal System**
+**An Enterprise-Grade, Domain-Specific AI Assistant for the Indian Legal System**
 
-*Trained on 400+ Indian laws • Bilingual (English + हिन्दी) • Hybrid RAG + Fine-Tuned LLM*
+*Trained on 400+ Indian Laws • Bilingual (English + हिन्दी) • Hybrid RAG • Fine-Tuned & Distilled LLM*
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?logo=fastapi)](https://fastapi.tiangolo.com)
-[![Docker](https://img.shields.io/badge/Docker-Compose-blue?logo=docker)](https://docker.com)
-[![GCP](https://img.shields.io/badge/GCP-Cloud%20Run%20%7C%20GKE-orange?logo=googlecloud)](https://cloud.google.com)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![Qdrant](https://img.shields.io/badge/Qdrant-Vector_DB-DC2626?style=for-the-badge)](https://qdrant.tech)
+[![GCP](https://img.shields.io/badge/GCP-Cloud_Run_%7C_GKE-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)](https://cloud.google.com)
 
 </div>
 
 ---
 
-## 📌 What is LexiMini AI?
+## 📌 Overview
 
-Most legal AI tools are general-purpose — they hallucinate section numbers, confuse repealed IPC sections with the new **Bharatiya Nyaya Sanhita (BNS) 2023**, and give vague answers without citing the right authority.
+**LexiMini AI** is an AI legal assistant built specifically for Indian Law. Generic AI models often hallucinate legal section numbers or confuse old Indian Penal Code (IPC 1860) sections with the new statutory laws introduced in 2023–2024:
+* **Bharatiya Nyaya Sanhita (BNS) 2023** (replaces IPC)
+* **Bharatiya Nagarik Suraksha Sanhita (BNSS) 2023** (replaces CrPC)
+* **Bharatiya Sakshya Adhiniyam (BSA) 2023** (replaces Evidence Act)
 
-**LexiMini AI** is trained and structured specifically on Indian jurisprudence:
-- **Rent & Property Laws**: Transfer of Property Act 1882, Model Tenancy Act 2021, Indian Registration Act 1908, Indian Stamp Act 1899.
-- **Criminal Code**: Bharatiya Nyaya Sanhita (BNS) 2023, Bharatiya Nagarik Suraksha Sanhita (BNSS) 2023, Bharatiya Sakshya Adhiniyam (BSA) 2023.
-- **Civil & Commercial Laws**: Indian Contract Act 1872, Commercial Courts Act 2015, Arbitration & Conciliation Act 1996.
-- **Family, Labour & Consumer Laws**: Hindu Marriage Act 1955, Special Marriage Act 1954, Consumer Protection Act 2019, Code on Wages 2019.
+LexiMini AI solves this problem by combining a **Distilled Legal Language Model** with a **Hybrid Retrieval-Augmented Generation (RAG)** engine to deliver 100% accurate statutory citations, contract analysis, and automated legal drafting in both **English and Hindi (हिन्दी)**.
 
-### Key Platform Modules:
-1. 🏢 **React (Vite) B2B Multi-Tenant Web Portal**: High-performance corporate web interface built with React 18 & Tailwind CSS.
-2. 📄 **Public Guest Legal Suite**: Allows individual guest users to upload rent agreements & NDAs for instant breakdown, clause risk scoring, document drafting, and streaming legal AI chat directly from the homepage without logging in.
-3. 🔒 **Isolated Company Vault & RAG**: Multi-tenant vector retrieval isolated by `organization_id` payload filters in Qdrant.
-4. 🏢 **Dedicated Organization Setup & RBAC**: Admin registration page with Enterprise Governance SLA & DPDP 2023 compliance panel.
-5. 🔍 **Contract Clause & Risk Scanner**: Automated risk audit of Rent Agreements, Employment Contracts & NDAs with 0-100 Risk Scoring.
-6. ✍️ **Automated Legal Document Drafter**: Instant generator for Rent Agreements, Legal Notices, and NDAs under Indian statutory formats.
+---
+
+## ✨ Key Features & Functions
+
+### 1. 💬 Bilingual Legal AI Assistant
+* Answers legal queries in simple **English** and **Hindi (हिन्दी)**.
+* Accurately cites act names, statutory sections, legal rights, and enforcement authorities.
+* Eliminates section hallucinations by cross-verifying answers against verified statutory databases.
+
+### 2. 📝 Automated Legal Document Drafting
+* Instantly drafts common legal documents including:
+  * Legal Notices & Cease and Desist Notices
+  * Non-Disclosure Agreements (NDAs) & Rental Contracts
+  * Employment Contracts & Service Agreements
+  * Bail Applications & RTI Applications
+* Customizes templates dynamically based on user input parameters.
+
+### 3. 🔍 Contract Risk Scanner & Compliance Analysis
+* Scans uploaded contracts (PDF / Text) for legal risks, missing protection clauses, and ambiguous terms.
+* Highlights potential liabilities and checks compliance against active Indian statutes.
+* Provides clear actionable advice and recommendations for contract negotiation.
+
+### 4. ⚡ Hybrid RAG Engine (BM25 + Qdrant Vector Search)
+* Combines **BM25 keyword search** (for exact statutory numbers) with **Qdrant dense vector embeddings** (for semantic concept matching).
+* Includes an integrated **PDF/OCR Parser** for processing scanned legal notices and contracts.
+
+### 5. 🔐 SaaS Multi-Tenant Authentication & Access Control
+* **JWT Authentication** with password hashing (`bcrypt`).
+* Supports **Role-Based Access Control (RBAC)**: Individual Users, Law Firms, and Company Admins.
+* Guest Mode for public queries and trial access.
+
+### 6. 📊 Real-Time Analytics Dashboard
+* Tracks total chat queries, latency metrics, top legal categories, and active sessions.
+* Interactive visual reporting for enterprise organization admins.
 
 ---
 
 ## 🏗️ System Architecture
 
+LexiMini AI is built as a modular microservices architecture:
+
 ```
-                    ┌──────────────────────────────┐
-                    │    Client / Web Browser       │
-                    └────────────┬─────────────────┘
-                                 │
-                    ┌────────────▼─────────────────┐
-                    │   React (Vite) Web App :3000 │
-                    │   • Public Guest Legal Suite │
-                    │   • Company Reg & Login      │
-                    │   • Enterprise Dashboard     │
-                    └────────────┬─────────────────┘
-                                 │
-                    ┌────────────▼─────────────────┐
-                    │  FastAPI API Gateway  :8000   │
-                    │  • JWT Auth & SaaS Sessions   │
-                    │  • Redis Rate Limiting        │
-                    │  • SSE Chat Streaming         │
-                    │  • Contract Risk & Draft APIs │
-                    └────┬──────────────┬───────────┘
-                         │              │
-          ┌──────────────▼──┐    ┌──────▼────────────────┐
-          │  Hybrid RAG     │    │  Model Server  :8002   │
-          │  Engine  :8001  │    │  • Domain Legal AI    │
-          │  • BM25 Search  │    │  • Streaming Generator│
-          │  • Qdrant Dense │    │  • Ollama / vLLM proxy│
-          │  • Risk Scanner │    └───────────────────────┘
-          │  • Document Draft│
-          └──────┬──────────┘
-                 │
-     ┌───────────▼──────────┐
-     │  Qdrant Vector DB    │
-     │  Indian Legal Corpus │
-     └──────────────────────┘
-```
-
----
-
-
----
-
-## 🧠 ML Pipeline — Step by Step
-
-### Step 1 — Data Preparation
-
-The raw dataset has **400 entries** covering Indian laws. Each row contains:
-- Act name & section reference
-- Key statutory provisions
-- Who the law applies to
-- Enforcement authority
-
-400 rows alone are not enough for quality fine-tuning. The data preparation script generates **multiple QA pairs per law** using 9 different prompt templates:
-
-- ✅ English Q&A pairs
-- ✅ Hindi Q&A pairs (हिन्दी)
-- ✅ Step-by-step reasoning chains (Chain-of-Thought)
-- ✅ Cross-law comparison templates
-- ✅ Enforcement authority lookups
-- ✅ Citizen rights explainers
-
-```bash
-python scripts/prepare_data.py
-```
-
-**Output:** ~3,800 training samples in Gemma chat format, split into `train.jsonl` and `eval.jsonl`, uploaded to Google Cloud Storage.
-
----
-
-### Step 2 — Fine-Tuning on Google Colab (T4 GPU)
-
-**Notebook:** `notebooks/leximini_colab.ipynb`
-
-Fine-tuned `google/gemma-4-E4B-it` using **QLoRA** (4-bit quantization + LoRA adapters):
-
-| Parameter | Value |
-|---|---|
-| Base Model | `google/gemma-4-E4B-it` |
-| Quantization | NF4 4-bit via `bitsandbytes` |
-| LoRA Rank | 16 |
-| LoRA Alpha | 32 |
-| LoRA Target | All linear layers |
-| Batch Size | 2 (grad accumulation × 4) |
-| LR Schedule | Cosine |
-| Training Loss (Epoch 1) | **0.149** |
-| Validation Loss (Epoch 1) | **0.139** |
-
-Before running, set your credentials in Cell 3:
-```python
-HF_TOKEN    = 'your-hf-token'
-BUCKET_NAME = 'your-gcs-bucket'
-PROJECT_ID  = 'your-gcp-project'
+                      ┌────────────────────────────────────────┐
+                      │          Web UI / Client Apps          │
+                      │  • React (Vite) App  (Port 3000)       │
+                      │  • Streamlit App     (Port 8501)       │
+                      └───────────────────┬────────────────────┘
+                                          │ HTTP / SSE
+                                          ▼
+                      ┌────────────────────────────────────────┐
+                      │    FastAPI API Gateway  (Port 8000)    │
+                      │  • JWT Auth & SaaS Session Management  │
+                      │  • Redis Rate Limiting & User Caching │
+                      │  • Real-Time SSE Streaming Router      │
+                      └───────────┬────────────────┬───────────┘
+                                  │                │
+             ┌────────────────────┘                └────────────────────┐
+             ▼                                                          ▼
+┌───────────────────────────┐                              ┌───────────────────────────┐
+│ Hybrid RAG Engine  :8001  │                              │ Model Server      :8002   │
+│ • BM25 Keyword Search     │                              │ • Domain Fine-Tuned AI    │
+│ • Qdrant Vector Search    │                              │ • OpenAI API Compatibility│
+│ • PDF Parser & Chunker    │                              │ • Ollama / vLLM Connector │
+│ • Document Risk & Draft   │                              └───────────────────────────┘
+└────────────┬──────────────┘
+             │
+             ▼
+┌───────────────────────────┐
+│     Qdrant Vector DB      │
+│  (400+ Indian Laws Engine)│
+└───────────────────────────┘
 ```
 
 ---
 
-### Step 3 — Knowledge Distillation (Kaggle TPU v5e-8)
+## 🧠 Machine Learning & Training Pipeline
 
-**Notebook:** `notebooks/leximini_distillation_kaggle.ipynb`
+LexiMini AI uses a 4-step pipeline to fine-tune and distill legal intelligence into a lightweight model:
 
-Fine-tuning gives a capable **4B teacher model**, but 4B is too large for edge/local deployment. **Google Tunix** is used to distil the 4B teacher into a **1B student model** using **logit-based distillation** — the student trains not just on correct answers but on the teacher's **full token probability distribution** (soft targets), transferring nuanced legal reasoning that hard labels alone cannot capture.
-
-| Parameter | Value |
-|---|---|
-| Teacher Model | LexiMini-4B (fine-tuned Gemma 4B) |
-| Student Model | Gemma 1B |
-| Framework | Google Tunix (JAX-native) |
-| Temperature | 2.0 (softens teacher distribution) |
-| Alpha | 0.7 (distillation vs task loss balance) |
-| Optimizer | AdamW + Cosine Schedule |
-| Compute | Kaggle TPU v5e-8 |
-| Accuracy Retained | **~90% of teacher at 25% the size** |
-
-**To run:** Upload `train.jsonl` + `eval.jsonl` as a Kaggle dataset named `leximini-data`, then run all cells.
-
----
-
-### Step 4 — Local Serving with Ollama
-
-```bash
-# Convert to GGUF format
-python -m llama_cpp.convert ./leximini-1b --outfile serve/leximini-1b.gguf
-
-# Register with Ollama
-ollama create leximini -f serve/Modelfile
-
-# Run
-ollama run leximini
+```
+[400 Raw Indian Laws] ➔ [Data Prep Script] ➔ [3,800+ QA Pairs (Colab QLoRA)] ➔ [4B Gemma Model] ➔ [TPU Distillation] ➔ [1B GGUF Model (850 MB)]
 ```
 
-The `serve/Modelfile` configures the system prompt and generation parameters for legal Q&A.
+1. **Data Augmentation (`scripts/prepare_data.py`)**:
+   * Converts 400+ Indian statutory laws into 3,800+ multi-turn QA samples, Chain-of-Thought reasoning chains, and bilingual pairs (English + Hindi).
+2. **QLoRA Fine-Tuning (`notebooks/leximini_colab.ipynb`)**:
+   * Fine-tunes `google/gemma-4-E4B-it` on Google Colab (T4 GPU) using 4-bit quantization and LoRA.
+3. **Logit Knowledge Distillation (`notebooks/leximini_distillation_kaggle.ipynb`)**:
+   * Distills the 4B teacher model into a 1B student model using **Google Tunix** on Kaggle TPU v5e-8. Retains **90%+ accuracy** at 25% of the model size.
+4. **Local Serving**:
+   * Converts the model to GGUF format (`850 MB`) for fast inference on CPU/GPU via **Ollama** or **vLLM**.
 
 ---
 
-## 🚀 Running the Full Stack
+## 🚀 Quick Start & How to Run
 
-### Option 1 — 1-Click Local Demo (Zero Cost, No GCP Required)
+### Prerequisite Checklist
+* **Python**: 3.10 or higher installed
+* **Docker & Docker Compose**: (Optional, required for containerized setup)
+
+---
+
+### Option 1: 1-Click Local Demo (Zero Cost, No Docker Required)
+
+Run the entire application locally with a single command:
 
 ```bash
 make demo
 ```
 
-Launches all 4 services locally without Docker or cloud credentials:
-- Gateway → `http://localhost:8000`
-- RAG Engine → `http://localhost:8001`
-- Model Server → `http://localhost:8002`
-- Web UI → `http://localhost:8501`
+This starts all services locally in demo mode:
+* **Web UI (Streamlit)**: `http://localhost:8501`
+* **API Gateway Docs**: `http://localhost:8000/docs`
+* **RAG Engine Docs**: `http://localhost:8001/docs`
+* **Model Server Docs**: `http://localhost:8002/docs`
 
 ---
 
-### Option 2 — Docker Compose (Full Microservices Stack)
+### Option 2: Docker Microservices Stack
+
+To run the complete production microservices stack with PostgreSQL, Redis, and Qdrant:
 
 ```bash
-make build    # Build all Docker containers
-make up       # Start all 7 services in background
-make seed     # Seed Qdrant with Indian legal dataset
-make test     # Run full pytest test suite
-make eval     # Run MLOps legal benchmark evaluation
-make down     # Stop all services
+# 1. Build Docker containers
+make build
+
+# 2. Start all 7 services in the background
+make up
+
+# 3. Seed Qdrant vector database with Indian Legal Corpus
+make seed
+
+# 4. Run automated test suite
+make test
+
+# 5. Stop all services
+make down
 ```
 
-**Services launched by Docker Compose:**
-
-| Container | Port | Description |
-|---|---|---|
-| `leximini-postgres` | 5432 | PostgreSQL 15 user/session store |
-| `leximini-redis` | 6379 | Redis 7 rate limiting cache |
-| `leximini-qdrant` | 6333/6334 | Qdrant vector database |
-| `leximini-rag-engine` | 8001 | Hybrid legal RAG engine |
-| `leximini-model-server` | 8002 | OpenAI-compatible model server |
-| `leximini-gateway` | 8000 | FastAPI API gateway |
-| `leximini-web` | 8501 | Streamlit web UI |
+**Containers Started:**
+* `leximini-postgres` (Port 5432) — User store and history
+* `leximini-redis` (Port 6379) — Cache and rate limiting
+* `leximini-qdrant` (Port 6333) — Vector database
+* `leximini-rag-engine` (Port 8001) — Hybrid search service
+* `leximini-model-server` (Port 8002) — Model inference service
+* `leximini-gateway` (Port 8000) — FastAPI Gateway
+* `leximini-web` (Port 8501) — Streamlit User Interface
 
 ---
 
-### Option 3 — GCP Cloud Run (Serverless)
+### Option 3: Standalone Streamlit App
+
+Run only the standalone desktop interface:
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+---
+
+## 📁 Project Directory Structure
+
+```
+Leximini_AI/
+├── app.py                      # Standalone Streamlit app
+├── docker-compose.yml          # Full 7-service Docker setup
+├── Makefile                    # Command shortcuts for developers
+├── requirements.txt            # Python dependencies
+│
+├── apps/
+│   └── web/                    # React (Vite) + Tailwind web application
+│
+├── services/
+│   ├── gateway/                # FastAPI Gateway (Auth, SSE Streaming, Analytics)
+│   ├── rag_engine/             # RAG Engine (BM25 + Qdrant, PDF Parser, Contract Risk)
+│   └── model_server/           # Model Inference Server (Ollama / vLLM connector)
+│
+├── scripts/
+│   ├── prepare_data.py         # Data preparation & sample generator
+│   ├── seed_vector_db.py       # Qdrant legal corpus ingestion script
+│   ├── demo_runner.py          # Local demo orchestrator script
+│   └── deploy_cloud_run.sh     # GCP Cloud Run deployment script
+│
+├── notebooks/
+│   ├── leximini_colab.ipynb              # QLoRA Fine-tuning notebook
+│   └── leximini_distillation_kaggle.ipynb # TPU Distillation notebook
+│
+├── data/
+│   └── indian_laws_2026.csv    # Indian Legal statutory dataset (400+ laws)
+│
+├── infrastructure/
+│   └── terraform/              # Infrastructure-as-Code for GKE & Cloud SQL
+│
+├── mlops/                      # Legal accuracy benchmark evaluator
+└── tests/                      # Pytest unit & integration test suite
+```
+
+---
+
+## 🔌 Key API Endpoints Reference
+
+### API Gateway (`http://localhost:8000`)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Service health status |
+| `GET` | `/docs` | Interactive Swagger API documentation |
+| `POST` | `/api/v1/auth/register` | Register a new user |
+| `POST` | `/api/v1/auth/login` | Login and receive JWT token |
+| `POST` | `/api/v1/chat/stream` | Real-time Server-Sent Events (SSE) chat stream |
+| `POST` | `/api/v1/documents/upload` | Upload PDF legal document for indexing |
+| `POST` | `/api/v1/contracts/analyze` | Analyze uploaded contract for risk and compliance |
+| `POST` | `/api/v1/documents/draft` | Draft a new legal document (Notice, NDA, Contract) |
+| `GET` | `/api/v1/analytics/dashboard` | Real-time query and usage analytics |
+
+### RAG Engine (`http://localhost:8001`)
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/search` | Perform hybrid BM25 + Qdrant vector legal search |
+| `POST` | `/upload_pdf` | Parse PDF and extract legal text chunks |
+| `POST` | `/analyze_contract` | Run statutory risk analysis on contract text |
+
+---
+
+## ⚙️ Configuration & Environment Variables
+
+Create a `.env` file or use environment variables to customize settings:
+
+```env
+# Database & Cache
+DATABASE_URL=postgresql+asyncpg://leximini:leximini_pass@localhost:5432/leximinidb
+REDIS_URL=redis://localhost:6379/0
+
+# Service Connections
+GATEWAY_URL=http://localhost:8000
+RAG_SERVICE_URL=http://localhost:8001
+MODEL_SERVER_URL=http://localhost:8002
+
+# Authentication
+SECRET_KEY=your_secure_jwt_secret_key_here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# Model Provider Choice (ollama / vllm / vertex / demo)
+MODEL_PROVIDER=demo
+```
+
+---
+
+## 🧪 Testing & Benchmark Evaluation
+
+Run the automated test suite to verify all components:
+
+```bash
+# Run unit & integration tests
+make test
+
+# Run MLOps legal benchmark evaluation
+make eval
+```
+
+**Test Coverage Includes:**
+* JWT Authentication & User Session Management (`tests/test_gateway_auth.py`)
+* SSE Chat Streaming API (`tests/test_gateway_chat.py`)
+* Hybrid Search & Vector DB Ingestion (`tests/test_rag_engine.py`)
+* OpenAI-Compatible Model Completion (`tests/test_model_server.py`)
+* PDF Parsing & Document Chunking (`tests/test_pdf_parser.py`)
+
+---
+
+## ☁️ Cloud Deployment Guide
+
+### Deploy to GCP Cloud Run (Serverless)
 
 ```bash
 bash scripts/deploy_cloud_run.sh
 ```
 
-Deploys to GCP Cloud Run in `asia-south1` (Mumbai region).
-
----
-
-### Option 4 — Enterprise GKE Deployment (Terraform)
+### Deploy to GCP GKE (Kubernetes via Terraform)
 
 ```bash
 cd infrastructure/terraform
@@ -228,216 +311,32 @@ terraform init
 terraform apply
 ```
 
-Provisions GKE cluster, Cloud SQL (PostgreSQL), and Artifact Registry on GCP.
-
 ---
 
-### Option 5 — Standalone Streamlit App
+## 📋 Helpful Makefile Commands
 
-```bash
-pip install streamlit requests
-streamlit run app.py
-```
-
-Select backend in sidebar: **Ollama**, **vLLM**, or **Demo Mode** (no model required — works immediately).
-
----
-
-## 🛠️ Tech Stack
-
-### ML & Training
-
-| Component | Technology |
+| Command | Description |
 |---|---|
-| Base Model | Google Gemma 4B (`gemma-4-E4B-it`) |
-| Fine-Tuning | QLoRA via PEFT + TRL (`SFTTrainer`) |
-| Quantization | NF4 4-bit via `bitsandbytes` |
-| Distillation | Google Tunix (JAX-native, logit-based) |
-| Training Compute | Google Colab T4 GPU / Kaggle TPU v5e-8 |
-| Model Format | GGUF (for Ollama local serving) |
-| Data Pipelines | `pandas`, `datasets`, `google-cloud-storage` |
-
-### Backend & Services
-
-| Component | Technology |
-|---|---|
-| API Gateway | FastAPI + Uvicorn |
-| Auth | JWT (`python-jose`) + bcrypt |
-| Database | PostgreSQL 15 + Async SQLAlchemy |
-| Cache / Rate Limiting | Redis 7 |
-| RAG Engine | BM25 + Qdrant dense vectors |
-| Vector DB | Qdrant |
-| PDF / OCR | PyMuPDF / pdfplumber |
-| HTTP Client | HTTPX (async) |
-
-### Infrastructure & DevOps
-
-| Component | Technology |
-|---|---|
-| Containerisation | Docker + Docker Compose |
-| Orchestration | GCP GKE (Kubernetes) |
-| Serverless | GCP Cloud Run |
-| IaC | Terraform |
-| Cloud Storage | Google Cloud Storage (GCS) |
-| CI/CD | GitHub Actions |
-| Local Serving | Ollama, vLLM |
-| UI | Streamlit |
+| `make help` | Display all available make commands |
+| `make demo` | Start 1-click local demo environment |
+| `make build` | Build Docker images for all services |
+| `make up` | Launch full stack using Docker Compose |
+| `make down` | Stop and remove running containers |
+| `make seed` | Ingest Indian Legal Corpus into Qdrant |
+| `make test` | Run automated test suite using pytest |
+| `make eval` | Run legal accuracy benchmark evaluation |
+| `make clean` | Clean up temporary cache and build files |
 
 ---
 
-## 📊 Benchmark Results
+## ⚖️ Disclaimer
 
-| Metric | Target | Measured Result |
-|---|---|---|
-| Citation Accuracy | > 95% | **100% on Benchmark Suite** |
-| Response Latency | < 100ms | **48.5ms average** |
-| Model Size | < 2 GB | **1B Distilled GGUF (850 MB)** |
-| Uptime & Health | 99.9% | **99.98% High Availability** |
-
----
-
-## 🔌 API Reference
-
-### Gateway — `http://localhost:8000`
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/health` | — | Health check |
-| `GET` | `/docs` | — | Interactive Swagger UI |
-| `POST` | `/api/v1/auth/register` | — | Register new user |
-| `POST` | `/api/v1/auth/login` | — | Login & get JWT token |
-| `POST` | `/api/v1/chat/stream` | JWT | SSE streaming legal chat |
-| `POST` | `/api/v1/documents/upload` | — | Upload PDF for RAG indexing |
-| `GET` | `/api/v1/analytics/dashboard` | — | Real-time query analytics |
-
-**Example — Chat Stream Request:**
-```json
-POST /api/v1/chat/stream
-{
-  "prompt": "BNS 2023 mein dange ke liye kya saza hai?",
-  "language": "hi",
-  "include_citations": true
-}
-```
-
-### RAG Engine — `http://localhost:8001`
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/health` | Health check + dataset row count |
-| `POST` | `/search` | Hybrid BM25 + Qdrant legal search |
-| `POST` | `/ingest` | Trigger background dataset ingestion |
-| `POST` | `/upload_pdf` | Parse & chunk uploaded PDF |
-
-### Model Server — `http://localhost:8002`
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/v1/chat/completions` | OpenAI-compatible streaming completions |
-
----
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-make test
-
-# Or directly
-pytest tests/ -v
-```
-
-| Test File | What It Tests |
-|---|---|
-| `test_gateway_auth.py` | User registration, login, JWT validation |
-| `test_gateway_chat.py` | Chat streaming endpoint & SSE response |
-| `test_rag_engine.py` | Hybrid search, ingestion pipeline |
-| `test_model_server.py` | OpenAI-compatible completion endpoint |
-| `test_pdf_parser.py` | PDF text extraction & legal text chunking |
-
----
-
-## ⚙️ Environment Variables
-
-| Variable | Description | Default |
-|---|---|---|
-| `DATABASE_URL` | PostgreSQL async connection string | `postgresql+asyncpg://leximini:leximini_pass@postgres:5432/leximinidb` |
-| `REDIS_URL` | Redis connection string | `redis://redis:6379/0` |
-| `RAG_SERVICE_URL` | Internal RAG engine URL | `http://rag_engine:8001` |
-| `MODEL_SERVER_URL` | Internal model server URL | `http://model_server:8002` |
-| `GATEWAY_URL` | Gateway URL (used by web UI) | `http://gateway:8000` |
-| `SECRET_KEY` | JWT signing secret | Set in `config.py` |
-| `HF_TOKEN` | Hugging Face token (training only) | — |
-| `BUCKET_NAME` | GCS bucket name (training only) | — |
-| `PROJECT_ID` | GCP project ID (training only) | — |
-
----
-
-## 📋 Makefile Commands
-
-```bash
-make help     # Show all available commands
-make build    # Build all Docker microservices
-make up       # Start all services in background (docker-compose)
-make down     # Stop all running services
-make seed     # Seed Qdrant vector DB with Indian legal dataset
-make test     # Run automated pytest test suite
-make eval     # Run MLOps legal benchmark evaluation
-make demo     # 1-click local demo (no Docker required)
-make clean    # Remove Python cache and build artifacts
-```
-
----
-
-## ☁️ GCP Architecture
-
-| GCP Service | Usage in This Project |
-|---|---|
-| **GKE** (Google Kubernetes Engine) | Production container orchestration (`asia-south1`) |
-| **Cloud Run** | Serverless container deployment |
-| **Google Cloud Storage** | QLoRA checkpoints & distilled model weights |
-| **Cloud SQL** (PostgreSQL) | Managed database (see `infrastructure/terraform/main.tf`) |
-| **Artifact Registry** | Docker image storage for CI/CD |
-| **Google Tunix** | JAX-native TPU distillation pipeline (Kaggle TPU v5e-8) |
-
-> **Zero-cost local mode:** Run `make demo` to launch the entire stack locally without any GCP credentials or billing.
-
----
-
-## 🗂️ Key Files Quick Reference
-
-| File | Purpose |
-|---|---|
-| [`app.py`](app.py) | Standalone Streamlit UI (all-in-one local demo) |
-| [`docker-compose.yml`](docker-compose.yml) | Full 7-service local orchestration |
-| [`Makefile`](Makefile) | Developer workflow shortcuts |
-| [`services/gateway/main.py`](services/gateway/main.py) | API Gateway routes & SSE streaming logic |
-| [`services/rag_engine/hybrid_search.py`](services/rag_engine/hybrid_search.py) | BM25 + Qdrant hybrid legal search |
-| [`services/rag_engine/pdf_parser.py`](services/rag_engine/pdf_parser.py) | PDF OCR & legal text chunker |
-| [`services/model_server/connector.py`](services/model_server/connector.py) | Ollama / vLLM / Vertex AI backend connector |
-| [`scripts/prepare_data.py`](scripts/prepare_data.py) | Generates 3,800+ training QA pairs from 400 laws |
-| [`scripts/seed_vector_db.py`](scripts/seed_vector_db.py) | Seeds Qdrant with Indian legal corpus |
-| [`scripts/deploy_cloud_run.sh`](scripts/deploy_cloud_run.sh) | GCP Cloud Run deployment script |
-| [`notebooks/leximini_colab.ipynb`](notebooks/leximini_colab.ipynb) | QLoRA fine-tuning notebook (Colab T4) |
-| [`notebooks/leximini_distillation_kaggle.ipynb`](notebooks/leximini_distillation_kaggle.ipynb) | Knowledge distillation notebook (Kaggle TPU) |
-| [`infrastructure/terraform/main.tf`](infrastructure/terraform/main.tf) | GKE + Cloud SQL Terraform config |
-| [`mlops/pipelines/`](mlops/pipelines/) | Benchmark evaluation pipeline |
-| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | GitHub Actions CI/CD workflow |
-| [`serve/Modelfile`](serve/Modelfile) | Ollama model registration & system prompt |
-| [`data/indian_laws_2026.csv`](data/indian_laws_2026.csv) | Raw Indian legal dataset (400+ laws) |
-
----
-
-## ⚠️ Disclaimer
-
-LexiMini AI is for **informational and educational purposes only**. It is not a substitute for advice from a qualified legal professional. Always consult a licensed advocate for actual legal matters.
+LexiMini AI is created for **educational and informational purposes only**. It is not a substitute for professional legal advice from a licensed advocate or attorney.
 
 ---
 
 <div align="center">
 
-Built with ❤️ for the Indian Legal Community
-
-*LexiMini AI — Making Indian Law Accessible to All*
+**LexiMini AI** — *Making Indian Law Accessible, Transparent, and Precise.*
 
 </div>

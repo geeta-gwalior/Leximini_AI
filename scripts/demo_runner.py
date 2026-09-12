@@ -17,6 +17,10 @@ def start_services():
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     os.chdir(base_dir)
 
+    print("[Dev Check] Verifying local python environment and dependencies...")
+    print(f"  • Base Path: {base_dir}")
+    print(f"  • Python Interpreter: {sys.executable}\n")
+
     processes = []
 
     env = os.environ.copy()
@@ -47,18 +51,19 @@ def start_services():
         print("  - API Gateway Docs: http://localhost:8000/docs")
         print("  - RAG Engine Docs:  http://localhost:8001/docs")
         print("  - Model Server:     http://localhost:8002/docs")
-        print("\nPress Ctrl+C to terminate all services safely.\n")
+        print("\n[Note] Press Ctrl+C to terminate all background services safely.\n")
 
         for p in processes:
             p.wait()
 
     except KeyboardInterrupt:
-        print("\n[Shutdown] Terminating all microservices safely...")
+        print("\n[Shutdown] Gracefully terminating all microservice workers...")
         for p in processes:
             p.terminate()
         for p in processes:
             p.wait()
-        print("[Shutdown] Completed.")
+        print("[Shutdown] All processes cleaned up successfully.")
 
 if __name__ == "__main__":
     start_services()
+

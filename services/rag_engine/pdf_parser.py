@@ -1,6 +1,9 @@
 import io
 import re
+import logging
 from typing import List, Dict, Any
+
+logger = logging.getLogger("leximini.pdf_parser")
 
 def extract_text_from_pdf_bytes(file_bytes: bytes) -> str:
     """
@@ -14,15 +17,18 @@ def extract_text_from_pdf_bytes(file_bytes: bytes) -> str:
         for page_idx, page in enumerate(reader.pages):
             page_text = page.extract_text() or ""
             if page_text.strip():
+                # NOTE: Adding explicit page markers helps LLM attribute clauses to exact document pages
                 extracted_text += f"\n--- Page {page_idx + 1} ---\n{page_text}\n"
     except Exception as e:
-        print(f"[PDFParser] pypdf extraction warning: {e}")
+        logger.warning(f"[PDFParser] pypdf extraction warning: {e}")
 
-    # Fallback to UTF-8 decoding if text extraction yielded empty string
+    # Fallback to UTF-8 decoding if text extraction yielded empty string (e.g. text/plain uploads)
     if not extracted_text.strip():
         try:
             extracted_text = file_bytes.decode("utf-8", errors="ignore")
         except Exception:
+            # FIXME: Integrate Tesseract / GCP Vision API for scanned image-only PDF contracts
+            logger.info("Empty text layer extracted. Document likely scanned PDF image.")
             extracted_text = "Scanned Legal Document [OCR Processing Applied]"
 
     return extracted_text
@@ -31,6 +37,7 @@ def chunk_legal_text(text: str, chunk_size: int = 500, overlap: int = 50) -> Lis
     """
     Splits legal document text into overlapping chunks with metadata.
     """
+    # NOTE: Preserving sentence boundaries improves vector search similarity scores for statutory citations
     clean_text = re.sub(r'\s+', ' ', text).strip()
     if not clean_text:
         return []
@@ -52,3 +59,4 @@ def chunk_legal_text(text: str, chunk_size: int = 500, overlap: int = 50) -> Lis
         start += (chunk_size - overlap)
 
     return chunks
+
